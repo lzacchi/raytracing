@@ -1,0 +1,21 @@
+# Build directory
+build/
+
+# Object files
+*.o
+
+# Executable
+cudart
+
+# Clang files
+.clang*
+.clangd
+compile_commands.json
+
+# # Image outputs (ignore everything in img except .gitkeep)
+# img/*
+# !img/.gitkeep
+
+# IDE
+.vscode/
+.DS_Store
