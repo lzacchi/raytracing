@@ -9,13 +9,17 @@ extern __global__ void create_world(hittable** d_list, hittable** d_world);
 extern __global__ void free_world(hittable** d_list, hittable** d_world);
 
 int main() {
+    float R = std::cos(pi / 4);
     float aspect_ratio = 16.0f / 9;
     int image_width = 1920;
 
-    int thread_x = 32;
-    int thread_y = 32;
+    int thread_x = 8;
+    int thread_y = 8;
+    int pixel_samples = 100;
+    int max_bounce = 500;
+    float cam_fov = 80.0f;
 
-    camera cam(aspect_ratio, image_width, thread_x, thread_y);
+    camera cam(aspect_ratio, image_width, thread_x, thread_y, pixel_samples, max_bounce, cam_fov);
 
     int image_heigth = cam.get_image_height();
 
@@ -23,7 +27,7 @@ int main() {
     hittable** d_list;
     hittable** d_world;
 
-    checkCudaErrors(cudaMalloc((void**)&d_list, 2 * sizeof(hittable*)));
+    checkCudaErrors(cudaMalloc((void**)&d_list, 5 * sizeof(hittable*)));
     checkCudaErrors(cudaMalloc((void**)&d_world, sizeof(hittable*)));
 
     int num_pixels = image_width * image_heigth;

@@ -4,11 +4,14 @@
 #include "interval.h"
 #include "ray.h"
 
+class material;
+
 class hit_record {
    public:
     point3 p;  // Interstection point
     vec3 normal;
     float t;  // Intersection distance
+    material* material_ptr;
 
     bool front_face;
 
