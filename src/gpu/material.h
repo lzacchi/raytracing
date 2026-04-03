@@ -10,6 +10,8 @@
     vec3(curand_uniform(local_rand_state), curand_uniform(local_rand_state), \
          curand_uniform(local_rand_state))
 
+#define RANDFLOAT curand_uniform(local_rand_state)
+
 __device__ inline vec3 random_in_unit_sphere(curandState* local_rand_state) {
     vec3 p;
     do {
@@ -75,34 +77,21 @@ class dielectric : public material {
 
     __device__ bool scatter(const ray& r_in, const hit_record& record, colour& attenuation,
                             ray& scattered, curandState* local_rand_state) const override {
-        vec3 outward_normal;
-        vec3 reflected = reflect(r_in.direction(), record.normal);
-        float ni_over_nt;
         attenuation = colour(1, 1, 1);
-        vec3 refracted;
-        float reflect_prob;
-        float cosine;
+        float ri = record.front_face ? (1.0f / refraction_index) : refraction_index;
+        vec3 unit_direction = unit_vector(r_in.direction());
+        float cos_theta = ::fminf(dot(-unit_direction, record.normal), 1.0f);
+        float sin_theta = ::sqrt(1.0f - cos_theta * cos_theta);
 
-        if (dot(r_in.direction(), record.normal) > 0.0f) {
-            outward_normal = -record.normal;
-            ni_over_nt = refraction_index;
-            cosine = dot(r_in.direction(), record.normal) / r_in.direction().length();
-            cosine = sqrt(1.0f - refraction_index * refraction_index * (1 - cosine * cosine));
+        bool cannot_refract = ri * sin_theta > 1.0f;
+        vec3 direction;
+
+        if (cannot_refract || schlick(cos_theta, ri) > RANDFLOAT) {
+            direction = reflect(unit_direction, record.normal);
         } else {
-            outward_normal = record.normal;
-            ni_over_nt = 1.0f / refraction_index;
-            cosine = -dot(r_in.direction(), record.normal) / r_in.direction().length();
+            direction = refract(unit_direction, record.normal, ri);
         }
-        if (refract(r_in.direction(), outward_normal, ni_over_nt, refracted)) {
-            reflect_prob = schlick(cosine, refraction_index);
-        } else {
-            reflect_prob = 1.0f;
-        }
-        if (curand_uniform(local_rand_state) < reflect_prob) {
-            scattered = ray(record.p, reflected);
-        } else {
-            scattered = ray(record.p, refracted);
-        }
+        scattered = ray(record.p, direction);
         return true;
     }
 

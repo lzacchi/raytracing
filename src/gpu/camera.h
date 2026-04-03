@@ -18,16 +18,26 @@ class camera {
     int pixel_samples = 10;
     int ray_bounces = 50;
     float vfov = 90.0f;
+    point3 lookfrom = point3(-2, 2, 1);
+    point3 lookat = point3(0, 0, -1);
+    vec3 vup = vec3(0, 1, 0);
+
+    float defocus_angle = 0.6f;
+    float focus_dist = 10.0f;
 
     camera(float asp_ratio, int width, int tx = 8, int ty = 8, int n_sample = 10, int n_bounce = 50,
-           float fov = 90.0f)
+           float fov = 90.0f, point3 lookfrom = point3(0, 0, 0), point3 lookat = point3(0, 0, -1),
+           vec3 vup = vec3(0, 1, 0))
         : aspect_ratio(asp_ratio),
           image_width(width),
           thread_x(tx),
           thread_y(ty),
           pixel_samples(n_sample),
           ray_bounces(n_bounce),
-          vfov(fov) {
+          vfov(fov),
+          lookfrom(lookfrom),
+          lookat(lookat),
+          vup(vup) {
         initialize();
     }
 
@@ -44,6 +54,10 @@ class camera {
    private:
     int image_heigth;
 
+    vec3 defocus_disk_u;
+    vec3 defocus_disk_v;
+    vec3 u, v, w;
+
     vec3 viewport_upper_left;
     vec3 viewport_u;
     vec3 viewport_v;
@@ -55,6 +69,7 @@ class camera {
     vec3 pixel_delta_v;
 
     curandState* d_rand_state;
+    curandState* d_rand_state_world;
 
     float pixel_samples_scale;
 
